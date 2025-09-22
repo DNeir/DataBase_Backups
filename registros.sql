@@ -1,106 +1,3 @@
-CREATE TABLE patients (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    birth_date DATE,
-    phone VARCHAR(20),
-    address TEXT
-);
-
-CREATE TABLE dental_histories (
-    id SERIAL PRIMARY KEY,
-    patient_id INT UNIQUE NOT NULL,
-    anamnesis TEXT,
-    CONSTRAINT fk_history_patient FOREIGN KEY (patient_id) REFERENCES patients (id)
-);
-
-CREATE TABLE dentists (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    specialty VARCHAR(100)
-);
-
-CREATE TABLE appointments (
-    id SERIAL PRIMARY KEY,
-    patient_id INT NOT NULL,
-    dentist_id INT NOT NULL,
-    date_time TIMESTAMP NOT NULL,
-    reason TEXT,
-    CONSTRAINT fk_appointment_patient FOREIGN KEY (patient_id) REFERENCES patients (id),
-    CONSTRAINT fk_appointment_dentist FOREIGN KEY (dentist_id) REFERENCES dentists (id)
-);
-
-CREATE TABLE teeth (
-    id SERIAL PRIMARY KEY,
-    tooth_number VARCHAR(10) NOT NULL,
-    description TEXT
-);
-
-CREATE TABLE treatments (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    cost NUMERIC(10,2)
-);
-
-CREATE TABLE treatment_plans (
-    id SERIAL PRIMARY KEY,
-    patient_id INT NOT NULL,
-    dentist_id INT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE,
-    status VARCHAR(50),
-    CONSTRAINT fk_plan_patient FOREIGN KEY (patient_id) REFERENCES patients (id),
-    CONSTRAINT fk_plan_dentist FOREIGN KEY (dentist_id) REFERENCES dentists (id)
-);
-
-CREATE TABLE procedures (
-    id SERIAL PRIMARY KEY,
-    plan_id INT NOT NULL,
-    treatment_id INT NOT NULL,
-    tooth_id INT,
-    procedure_date DATE NOT NULL,
-    observations TEXT,
-    CONSTRAINT fk_procedure_plan FOREIGN KEY (plan_id) REFERENCES treatment_plans (id),
-    CONSTRAINT fk_procedure_treatment FOREIGN KEY (treatment_id) REFERENCES treatments (id),
-    CONSTRAINT fk_procedure_tooth FOREIGN KEY (tooth_id) REFERENCES teeth (id)
-);
-
-CREATE TABLE materials (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    stock INT
-);
-
-CREATE TABLE treatment_materials (
-    treatment_id INT NOT NULL,
-    material_id INT NOT NULL,
-    quantity NUMERIC(10,2) NOT NULL,
-    PRIMARY KEY (treatment_id, material_id),
-    CONSTRAINT fk_tm_treatment FOREIGN KEY (treatment_id) REFERENCES treatments (id),
-    CONSTRAINT fk_tm_material FOREIGN KEY (material_id) REFERENCES materials (id)
-);
-
-CREATE TABLE dental_labs (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    address TEXT
-);
-
-CREATE TABLE payments (
-    id SERIAL PRIMARY KEY,
-    plan_id INT NOT NULL,
-    payment_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    amount NUMERIC(10,2) NOT NULL,
-    payment_method VARCHAR(50),
-    CONSTRAINT fk_payment_plan FOREIGN KEY (plan_id) REFERENCES treatment_plans (id)
-);
-
--- Registros
-
 -- Insertar 200 pacientes
 INSERT INTO patients (first_name, last_name, birth_date, phone, address) VALUES
 ('Ana', 'García', '1985-03-15', '555-0001', 'Calle 1 #10-20'),
@@ -280,7 +177,7 @@ INSERT INTO patients (first_name, last_name, birth_date, phone, address) VALUES
 ('Plácido', 'Vicente', '1983-12-11', '555-0175', 'Calle 860 #40-40'),
 ('Querubín', 'Esteban', '1988-08-27', '555-0176', 'Carrera 865 #15-15'),
 ('Ruperto', 'Román', '1976-04-14', '555-0177', 'Avenida 870 #35-30'),
-('Servando', 'Santiago', '1994-02-29', '555-0178', 'Calle 875 #25-25'),
+('Servando', 'Santiago', '1994-02-22', '555-0178', 'Calle 875 #25-25'),
 ('Tiburcio', 'Garrido', '1982-10-16', '555-0179', 'Carrera 880 #45-40'),
 ('Ubaldo', 'Lozano', '1987-06-02', '555-0180', 'Avenida 885 #30-35'),
 ('Venancia', 'Cano', '1995-01-19', '555-0181', 'Calle 890 #20-20'),
@@ -915,6 +812,7 @@ INSERT INTO appointments (patient_id, dentist_id, date_time, reason) VALUES
 
 -- Insertar 200 dientes
 INSERT INTO teeth (tooth_number, description) VALUES
+-- Dentición permanente (superior e inferior, derecha e izquierda)
 ('11', 'Incisivo central superior derecho'),
 ('12', 'Incisivo lateral superior derecho'),
 ('13', 'Canino superior derecho'),
@@ -972,6 +870,21 @@ INSERT INTO teeth (tooth_number, description) VALUES
 ('S3', 'Supernumerario paramolar'),
 ('S4', 'Supernumerario distomolar'),
 ('S5', 'Supernumerario palatino'),
+('S6', 'Supernumerario incisivo inferior'),
+('S7', 'Supernumerario canino superior'),
+('S8', 'Supernumerario canino inferior'),
+('S9', 'Supernumerario premolar superior'),
+('S10', 'Supernumerario premolar inferior'),
+('S11', 'Supernumerario molar superior'),
+('S12', 'Supernumerario molar inferior'),
+('S13', 'Supernumerario bilateral'),
+('S14', 'Supernumerario múltiple superior'),
+('S15', 'Supernumerario múltiple inferior'),
+('S16', 'Supernumerario en línea media inferior'),
+('S17', 'Supernumerario parapremolar'),
+('S18', 'Supernumerario distoincisivo'),
+('S19', 'Supernumerario peridens'),
+('S20', 'Supernumerario suplementario'),
 ('D1', 'Diente impactado 18'),
 ('D2', 'Diente impactado 28'),
 ('D3', 'Diente impactado 38'),
@@ -982,7 +895,26 @@ INSERT INTO teeth (tooth_number, description) VALUES
 ('D8', 'Diente con dilaceración'),
 ('D9', 'Diente con taurodontismo'),
 ('D10', 'Diente con geminación'),
--- Completando hasta 200 dientes con variaciones anatómicas
+('D11', 'Diente fusionado'),
+('D12', 'Diente con hipoplasia'),
+('D13', 'Diente con hipocalcificación'),
+('D14', 'Diente retenido'),
+('D15', 'Diente con macrodoncia'),
+('D16', 'Diente con microdoncia'),
+('D17', 'Diente con dens evaginatus'),
+('D18', 'Diente con dens invaginatus'),
+('D19', 'Diente ectópico premolar'),
+('D20', 'Diente ectópico molar'),
+('D21', 'Diente desplazado hacia palatino'),
+('D22', 'Diente desplazado hacia lingual'),
+('D23', 'Diente desplazado hacia vestibular'),
+('D24', 'Diente desplazado hacia mesial'),
+('D25', 'Diente desplazado hacia distal'),
+('D26', 'Diente con raíz curva'),
+('D27', 'Diente con rizomicrodoncia'),
+('D28', 'Diente con rizomegadoncia'),
+('D29', 'Diente retenido múltiple'),
+('D30', 'Diente con alteración estructural'),
 ('V1', 'Variante anatómica raíz extra 16'),
 ('V2', 'Variante anatómica raíz extra 26'),
 ('V3', 'Variante anatómica raíz extra 36'),
@@ -992,10 +924,98 @@ INSERT INTO teeth (tooth_number, description) VALUES
 ('V7', 'Variante anatómica perla del esmalte'),
 ('V8', 'Variante anatómica surco palatogingival'),
 ('V9', 'Variante anatómica tubérculo de Carabelli'),
-('V10', 'Variante anatómica cúspide adicional');
+('V10', 'Variante anatómica cúspide adicional'),
+('V11', 'Variante anatómica cúspide paramolar'),
+('V12', 'Variante anatómica cúspide en garra'),
+('V13', 'Variante anatómica cúspide en talón'),
+('V14', 'Variante anatómica cúspide lingual'),
+('V15', 'Variante anatómica cúspide vestibular'),
+('V16', 'Variante anatómica raíz fusionada'),
+('V17', 'Variante anatómica raíz bífida'),
+('V18', 'Variante anatómica raíz trifurcada'),
+('V19', 'Variante anatómica raíz hipercurvada'),
+('V20', 'Variante anatómica conducto accesorio'),
+('V21', 'Variante anatómica conducto lateral'),
+('V22', 'Variante anatómica conducto múltiple'),
+('V23', 'Variante anatómica cámara pulpar amplia'),
+('V24', 'Variante anatómica cámara pulpar reducida'),
+('V25', 'Variante anatómica esmalte hipoplásico'),
+('V26', 'Variante anatómica esmalte rugoso'),
+('V27', 'Variante anatómica esmalte periquematías marcadas'),
+('V28', 'Variante anatómica esmalte translúcido'),
+('V29', 'Variante anatómica esmalte opaco'),
+('V30', 'Variante anatómica cúspide palatina extra'),
+('A1', 'Ausencia congénita incisivo lateral superior derecho'),
+('A2', 'Ausencia congénita incisivo lateral superior izquierdo'),
+('A3', 'Ausencia congénita segundo premolar superior derecho'),
+('A4', 'Ausencia congénita segundo premolar superior izquierdo'),
+('A5', 'Ausencia congénita segundo premolar inferior derecho'),
+('A6', 'Ausencia congénita segundo premolar inferior izquierdo'),
+('A7', 'Ausencia congénita tercer molar superior derecho'),
+('A8', 'Ausencia congénita tercer molar superior izquierdo'),
+('A9', 'Ausencia congénita tercer molar inferior derecho'),
+('A10', 'Ausencia congénita tercer molar inferior izquierdo'),
+('R1', 'Diente restaurado con amalgama'),
+('R2', 'Diente restaurado con resina'),
+('R3', 'Diente restaurado con incrustación metálica'),
+('R4', 'Diente restaurado con incrustación cerámica'),
+('R5', 'Diente restaurado con corona total metálica'),
+('R6', 'Diente restaurado con corona total cerámica'),
+('R7', 'Diente restaurado con perno colado'),
+('R8', 'Diente restaurado con perno prefabricado'),
+('R9', 'Diente restaurado con reconstrucción estética'),
+('R10', 'Diente restaurado con sellante de fosas y fisuras'),
+('P1', 'Prótesis fija en incisivo central superior derecho'),
+('P2', 'Prótesis fija en incisivo lateral superior derecho'),
+('P3', 'Prótesis fija en canino superior derecho'),
+('P4', 'Prótesis fija en primer premolar superior derecho'),
+('P5', 'Prótesis fija en segundo premolar superior derecho'),
+('P6', 'Prótesis fija en primer molar superior derecho'),
+('P7', 'Prótesis fija en segundo molar superior derecho'),
+('P8', 'Prótesis fija en tercer molar superior derecho'),
+('P9', 'Prótesis fija en incisivo central superior izquierdo'),
+('P10', 'Prótesis fija en incisivo lateral superior izquierdo'),
+('P11', 'Prótesis removible en arcada superior'),
+('P12', 'Prótesis removible en arcada inferior'),
+('P13', 'Prótesis total superior'),
+('P14', 'Prótesis total inferior'),
+('P15', 'Implante unitario en premolar superior derecho'),
+('E1', 'Diente tratado endodónticamente 11'),
+('E2', 'Diente tratado endodónticamente 12'),
+('E3', 'Diente tratado endodónticamente 21'),
+('E4', 'Diente tratado endodónticamente 22'),
+('E5', 'Diente tratado endodónticamente 36'),
+('E6', 'Diente tratado endodónticamente 46'),
+('E7', 'Diente tratado endodónticamente 16'),
+('E8', 'Diente tratado endodónticamente 26'),
+('E9', 'Diente tratado endodónticamente 31'),
+('E10', 'Diente tratado endodónticamente 41'),
+('C1', 'Diente con caries incipiente en 16'),
+('C2', 'Diente con caries incipiente en 26'),
+('C3', 'Diente con caries moderada en 36'),
+('C4', 'Diente con caries moderada en 46'),
+('C5', 'Diente con caries profunda en 11'),
+('C6', 'Diente con caries profunda en 21'),
+('C7', 'Diente con caries radicular en 31'),
+('C8', 'Diente con caries radicular en 41'),
+('C9', 'Diente con caries generalizada en arcada superior'),
+('C10', 'Diente con caries generalizada en arcada inferior'),
+('M1', 'Diente con movilidad grado I'),
+('M2', 'Diente con movilidad grado II'),
+('M3', 'Diente con movilidad grado III'),
+('M4', 'Diente con movilidad por pérdida ósea'),
+('M5', 'Diente con movilidad post-trauma'),
+('F1', 'Diente fracturado esmalte'),
+('F2', 'Diente fracturado esmalte-dentina'),
+('F3', 'Diente fracturado esmalte-dentina-pulpa'),
+('F4', 'Diente con fractura radicular'),
+('F5', 'Diente con fractura coronaria'),
+('F6', 'Diente con fractura horizontal'),
+('F7', 'Diente con fractura vertical'),
+('F8', 'Diente con fractura múltiple'),
+('F9', 'Diente con fractura coronoradicular'),
+('F10', 'Diente fracturado restaurado');
 
--- Solo primeras 50 de 200 dientes por limitación de espacio
--- Se completarían hasta 200 con más variantes anatómicas
 
 -- Insertar 200 tratamientos
 INSERT INTO treatments (name, description, cost) VALUES
@@ -2468,11 +2488,3 @@ INSERT INTO payments (plan_id, payment_date, amount, payment_method) VALUES
 (199, '2024-07-31 12:40:00', 2000000, 'Tarjeta de débito'),
 (200, '2024-08-01 14:55:00', 600000, 'Transferencia');
 
--- COMPLETADO: Se han insertado 200 registros completos para cada tabla:
--- ✓ 200 Tratamientos (treatments)
--- ✓ 200 Planes de tratamiento (treatment_plans)
--- ✓ 200 Procedimientos (procedures)
--- ✓ 200 Materiales (materials)
--- ✓ 100 Relaciones tratamiento-materiales (treatment_materials)
--- ✓ 200 Laboratorios dentales (dental_labs)
--- ✓ 200 Pagos (payments)
